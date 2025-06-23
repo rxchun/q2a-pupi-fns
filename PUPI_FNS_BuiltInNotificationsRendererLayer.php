@@ -61,6 +61,38 @@ class qa_html_theme_layer extends qa_html_theme_base
 
         $this->content['body_header'] .= sprintf('<style>%s</style>', $html);
     }
+    
+    public function fns_bell_icon()
+    {
+        // Bell icon HTML
+        $bellIcon = <<<HTML
+            <div class="pupi_fns_notification-icon-container">
+                <i class="pupi-fns-icon-bell" data-fetching-data="false"></i>
+            </div>
+HTML;
+
+        // Add the icon as a suffix to the logged-in user data for legacy themes
+        $legacyThemes = ['Snow', 'Classic', 'Candy'];
+        $currentTheme = qa_opt('site_theme');
+
+        if (in_array($currentTheme, $legacyThemes)) {
+            // Ensure suffix exists before appending
+            $loggedInSuffix = isset($this->content['loggedin']['suffix']) ? $this->content['loggedin']['suffix'] : '';
+            $this->content['loggedin']['suffix'] = $loggedInSuffix . ' ' . $bellIcon;
+        } else {
+            // Modern themes: output icon normally into header
+            $this->output($bellIcon);
+        }
+    }
+
+    public function nav_user_search()
+    {
+        // Prepend the bell icon to the user navigation
+        $this->fns_bell_icon();
+
+        // Continue rendering the original user nav
+        qa_html_theme_base::nav_user_search();
+    }
 
     /**
      * @return void

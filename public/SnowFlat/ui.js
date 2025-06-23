@@ -35,32 +35,29 @@ const createNode = (tagName, classes, parent) => {
 };
 
 const createMainUi = () => {
+    const notificationIconContainer = document.querySelector('.pupi_fns_notification-icon-container');
+    if (!notificationIconContainer) return;
+
+    const bellIconNode = notificationIconContainer.querySelector('.pupi-fns-icon-bell');
+
+    const labelNode = createNode('span', ['pupi_fns_notification-icon-label'], notificationIconContainer);
+    labelNode.style.display = 'none';
+
     const updateUnreadNotifications = notificationCount => {
         labelNode.innerText = notificationCount;
         labelNode.style.display = notificationCount > 0 ? 'flex' : 'none';
     };
-
-    const setNotificationListVisible = isVisible => {
-        notificationListNode.style.display = isVisible ? 'flex' : 'none';
-        if (!isVisible) {
-            updateUnreadNotifications(0);
-        }
-    };
-
-    const notificationIconContainer = createNode('div', ['pupi_fns_notification-icon-container'], null);
-
-    document.querySelector('.qa-nav-main').after(notificationIconContainer);
-
-    const bellIconNode = createNode('i', ['pupi-fns-icon-bell'], notificationIconContainer);
-    bellIconNode.dataset.fetchingData = 'false';
-
+    
     const notificationListNode = createNode('div', ['pupi_fns_notification-list'], null);
     notificationListNode.style.display = 'none';
 
-    const labelNode = createNode('span', ['pupi_fns_notification-icon-label'], notificationIconContainer);
+    const setNotificationListVisible = isVisible => {
+        notificationListNode.style.display = isVisible ? 'flex' : 'none';
+    };
+
     updateUnreadNotifications(pupi_fns_options.notification_stats.unread_notifications);
 
-    document.addEventListener('click', e => setNotificationListVisible(false));
+    document.addEventListener('click', () => setNotificationListVisible(false));
 
     const notificationBellClickHandler = async e => {
         e.stopPropagation();
@@ -96,13 +93,11 @@ const createMainUi = () => {
         };
 
         const isFetchingData = bellIconNode.dataset.fetchingData === 'true';
-
         if (isFetchingData) {
             return;
         }
 
         const isVisible = notificationListNode.style.display === 'flex';
-
         if (isVisible) {
             setNotificationListVisible(false);
             return;
@@ -124,6 +119,8 @@ const createMainUi = () => {
             }
 
             setNotificationListVisible(true);
+            updateUnreadNotifications(0);
+            
         } catch (error) {
             console.error('Error fetching notifications:', error);
         } finally {
