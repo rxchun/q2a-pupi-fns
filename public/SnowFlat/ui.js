@@ -35,32 +35,29 @@ const createNode = (tagName, classes, parent) => {
 };
 
 const createMainUi = () => {
+    const notificationIconContainer = document.querySelector('.pupi_fns_notification-icon-container');
+    if (!notificationIconContainer) return;
+
+    const bellIconNode = notificationIconContainer.querySelector('.pupi-fns-icon-bell');
+
+    const labelNode = createNode('span', ['pupi_fns_notification-icon-label'], notificationIconContainer);
+    labelNode.style.display = 'none';
+
     const updateUnreadNotifications = notificationCount => {
         labelNode.innerText = notificationCount;
         labelNode.style.display = notificationCount > 0 ? 'flex' : 'none';
     };
-
-    const setNotificationListVisible = isVisible => {
-        notificationListNode.style.display = isVisible ? 'flex' : 'none';
-        if (!isVisible) {
-            updateUnreadNotifications(0);
-        }
-    };
-
-    const notificationIconContainer = createNode('div', ['pupi_fns_notification-icon-container'], null);
-
-    document.querySelector('.qa-nav-main').after(notificationIconContainer);
-
-    const bellIconNode = createNode('i', ['pupi-fns-icon-bell'], notificationIconContainer);
-    bellIconNode.dataset.fetchingData = 'false';
-
+    
     const notificationListNode = createNode('div', ['pupi_fns_notification-list'], null);
     notificationListNode.style.display = 'none';
 
-    const labelNode = createNode('span', ['pupi_fns_notification-icon-label'], notificationIconContainer);
+    const setNotificationListVisible = isVisible => {
+        notificationListNode.style.display = isVisible ? 'flex' : 'none';
+    };
+
     updateUnreadNotifications(pupi_fns_options.notification_stats.unread_notifications);
 
-    document.addEventListener('click', e => setNotificationListVisible(false));
+    document.addEventListener('click', () => setNotificationListVisible(false));
 
     const notificationBellClickHandler = async e => {
         e.stopPropagation();
@@ -77,7 +74,7 @@ const createMainUi = () => {
                 notificationListNode.style.removeProperty('width');
                 notificationIconContainer.appendChild(notificationListNode);
             } else {
-                const mainNavWrapperNode = document.querySelector('.qam-main-nav-wrapper');
+                const mainNavWrapperNode = document.querySelector('.fns-mobile-container');
                 notificationListNode.style.width = '100%';
                 mainNavWrapperNode.appendChild(notificationListNode);
             }
@@ -96,13 +93,11 @@ const createMainUi = () => {
         };
 
         const isFetchingData = bellIconNode.dataset.fetchingData === 'true';
-
         if (isFetchingData) {
             return;
         }
 
         const isVisible = notificationListNode.style.display === 'flex';
-
         if (isVisible) {
             setNotificationListVisible(false);
             return;
@@ -124,6 +119,8 @@ const createMainUi = () => {
             }
 
             setNotificationListVisible(true);
+            updateUnreadNotifications(0);
+            
         } catch (error) {
             console.error('Error fetching notifications:', error);
         } finally {
@@ -154,7 +151,10 @@ const createNotificationItemNode = notification => {
     createNode('div', ['pupi_fns_notification-item-name'], headerNode).innerText = notification.name;
 
     const notificationItemImageNode = createNode('div', ['pupi_fns_notification-item-image'], headerNode);
-    createNode('i', [notification.icon], notificationItemImageNode);
+    const iconNode = createNode('i', [notification.icon], notificationItemImageNode);
+
+    // Create the Points <span> directly as a sibling of <i> inside notificationItemImageNode
+    const pointsSpanNode = createNode('span', [], notificationItemImageNode);
 
     createNode('div', ['pupi_fns_notification-item-date'], headerNode).innerText = formatDate(notification.created_at);
 
@@ -162,6 +162,9 @@ const createNotificationItemNode = notification => {
     createNode('div', ['pupi_fns_notification-item-is-read-dot', notification.is_read ? 'pupi_fns_notification-item-is-read-dot-grey' : 'pupi_fns_notification-item-is-read-dot-red'], notificationItemIsRead);
 
     createNode('div', ['pupi_fns_notification-item-body'], notificationItemContainerNode).innerText = notification.text;
+
+    // Call async fetch and update pointsSpanNode when done
+    loadPointsConfigAndCompute(notification, pointsSpanNode);
 
     return notificationItemContainerNode;
 };
@@ -188,3 +191,125 @@ const formatDate = dateString => {
 };
 
 createMainUi();
+
+// Cache object to avoid fetching points config multiple times
+const pointsCache = {
+    config: null,
+    promise: null
+};
+
+/**
+ * Loads cached_points.json (if not already loaded) and updates the points display
+ * for a specific notification and target span.
+ *
+ * @param {object} notification - The notification object.
+ * @param {HTMLElement} pointsSpanNode - The DOM element where points should be shown.
+ */
+const loadPointsConfigAndCompute = (notification, pointsSpanNode) => {
+    const container = document.querySelector('.pupi_fns_notification-icon-container');
+    if (!container) return;
+
+    let fetchUrl = container.dataset.pluginUrl;
+    if (!fetchUrl.endsWith('/')) fetchUrl += '/';
+    fetchUrl += 'cached_points.json';
+
+    // If already cached, use it immediately
+    if (pointsCache.config) {
+        updatePointsDisplay(notification, pointsSpanNode, pointsCache.config);
+        return;
+    }
+
+    // If a fetch is in progress, wait for it
+    if (pointsCache.promise) {
+        pointsCache.promise
+            .then(config => updatePointsDisplay(notification, pointsSpanNode, config))
+            .catch(() => pointsSpanNode.remove());
+        return;
+    }
+
+    // First-time fetch
+    pointsCache.promise = fetch(fetchUrl)
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to load FNS points config');
+            return response.json();
+        })
+        .then(config => {
+            pointsCache.config = config;
+            updatePointsDisplay(notification, pointsSpanNode, config);
+            return config;
+        })
+        .catch(error => {
+            console.error('Error loading or processing FNS points config:', error);
+            pointsSpanNode.remove();
+        });
+};
+
+/**
+ * Updates the given points span element with the calculated points.
+ *
+ * @param {object} notification - The notification object.
+ * @param {HTMLElement} pointsSpanNode - The element to update.
+ * @param {object} pointsConfig - The points config from the JSON cache.
+ */
+const updatePointsDisplay = (notification, pointsSpanNode, pointsConfig) => {
+    const points = getPointsForEvent(notification.event_name, pointsConfig);
+    pointsSpanNode.innerHTML = ''; // clear previous content
+
+    if (points !== null && points !== 0) {
+        const gainedEvents = new Set([
+            'q_vote_up',
+            'a_vote_up',
+            'c_vote_up',
+            'a_select'
+        ]);
+        const lostEvents = new Set([
+            'q_vote_down',
+            'a_vote_down',
+            'c_vote_down'
+        ]);
+
+        if (gainedEvents.has(notification.event_name)) {
+            pointsSpanNode.className = 'fns-gained-points';
+            pointsSpanNode.innerText = `+${points}`;
+        } else if (lostEvents.has(notification.event_name)) {
+            pointsSpanNode.className = 'fns-lost-points';
+            pointsSpanNode.innerText = `-${points}`;
+        } else {
+            pointsSpanNode.remove();
+        }
+    } else {
+        pointsSpanNode.remove();
+    }
+};
+
+/**
+ * Returns the number of points earned for a specific notification event.
+ * @param {string} eventName - The event name (e.g., 'q_vote_up', 'a_vote_down')
+ * @param {object} config - Parsed config object from cached_points.json
+ * @returns {number|null} - The computed points (multiplied), or null if unknown event
+ */
+const getPointsForEvent = (eventName, config) => {
+    const multiplier = parseInt(config.points_multiple, 10);
+
+    const eventToOptionMap = {
+        q_vote_up: 'points_per_q_voted_up',
+        q_vote_down: 'points_per_q_voted_down',
+        a_vote_up: 'points_per_a_voted_up',
+        a_vote_down: 'points_per_a_voted_down',
+        c_vote_up: 'points_per_c_voted_up',
+        c_vote_down: 'points_per_c_voted_down',
+        a_select: 'points_a_selected',
+        q_vote_nil: null, // points removed
+        a_vote_nil: null,
+        c_vote_nil: null
+    };
+
+    const configKey = eventToOptionMap[eventName];
+
+    if (!configKey || !(configKey in config)) {
+        return null;
+    }
+
+    const basePoints = parseInt(config[configKey], 10);
+    return basePoints * multiplier;
+};
