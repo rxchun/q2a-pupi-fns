@@ -22,6 +22,9 @@
     <http://www.gnu.org/licenses/>.
 */
 
+// CSS & JS Patch Version
+define('FNS_FRONTEND_VERSION', '?v=3');
+
 class qa_html_theme_layer extends qa_html_theme_base
 {
     public function initialize()
@@ -31,44 +34,36 @@ class qa_html_theme_layer extends qa_html_theme_base
         if (!qa_is_logged_in()) {
             return;
         }
-
-        $this->addCss();
-        $this->addJsBodyFooter();
         
-        $cache_file = QA_HTML_THEME_LAYER_DIRECTORY . 'cached_points.json';
-        $is_admin = qa_get_logged_in_level() >= QA_USER_LEVEL_ADMIN;
-
-        // Generate cached_points.json on page load if it doesn't exist and the user is an admin.
-        if ($is_admin && !file_exists($cache_file)) {
-            $this->getVotingPoints(true);
-        }
-
-        // Update cache if admin clicked "Save/Recalculate" on the Points admin page, or Plugin Options
-        $code = qa_post_text('code');
-        $getShowAnchor = '?show=' . qa_get('show') . '#' . qa_get('show');
-        $valid_security_code = qa_check_form_security_code('admin/points', $code) || qa_check_form_security_code('admin/plugins'.$getShowAnchor, $code);
-        $save_clicked = qa_clicked('dosaverecalc') || qa_clicked('pupi_fns_save_button');
-
-        if (
-            $this->template === 'admin'
-            && $is_admin
-            && $valid_security_code
-            && $save_clicked
-        ) {
-            $this->getVotingPoints(true); // force refresh
-        }
+        $this->initialize_fns_cached_points();
+    }
+    
+    function head_custom() {
+        qa_html_theme_base::head_custom();
+        
+        if (qa_is_logged_in())
+            $this->addCss();
+    }
+    
+    public function body_hidden()
+    {
+        qa_html_theme_base::body_hidden();
+        
+        if (qa_is_logged_in())
+            $this->addJsBodyFooter();
     }
 
     private function addCss()
     {
-        if (!isset($this->content['body_header'])) {
-            $this->content['body_header'] = '';
-        }
-
+    
+        $this->output('
+            <link rel="preload" as="style" href="'.QA_HTML_THEME_LAYER_URLTOROOT.'public/SnowFlat/style.min.css'.FNS_FRONTEND_VERSION.'" onload="this.onload=null;this.rel=\'stylesheet\'">
+            <noscript><link rel="stylesheet" href="'.QA_HTML_THEME_LAYER_URLTOROOT.'public/SnowFlat/style.min.css'.FNS_FRONTEND_VERSION.'"></noscript>
+        ');
+        
         $path = QA_HTML_THEME_LAYER_URLTOROOT . 'public/SnowFlat/fontello/font/';
 
-        $html = file_get_contents(QA_HTML_THEME_LAYER_DIRECTORY . 'public/SnowFlat/style.min.css');
-        $html .= sprintf(
+        $html = sprintf(
             '@font-face {' .
             'font-family: "pupi-fns-fontello";' .
             'src: url("%spupi-fns-fontello.eot?20759465");' .
@@ -82,7 +77,7 @@ class qa_html_theme_layer extends qa_html_theme_base
             '}',
             $path, $path, $path, $path, $path, $path);
 
-        $this->content['body_header'] .= sprintf('<style>%s</style>', $html);
+        $this->output(sprintf('<style>%s</style>', $html));
     }
     
     /**
@@ -90,12 +85,7 @@ class qa_html_theme_layer extends qa_html_theme_base
      */
     private function addJsBodyFooter(): void
     {
-        if (!isset($this->content['body_footer'])) {
-            $this->content['body_footer'] = '';
-        }
-
-        $content = file_get_contents(QA_HTML_THEME_LAYER_DIRECTORY . 'public/SnowFlat/ui.min.js');
-        $this->content['body_footer'] .= sprintf('<script>%s</script>', $content);
+        $this->output_raw('<script src="'.QA_HTML_THEME_LAYER_URLTOROOT.'public/SnowFlat/ui.min.js'.FNS_FRONTEND_VERSION.'" defer></script>');
     }
     
     public function fns_bell_icon()
@@ -112,15 +102,15 @@ class qa_html_theme_layer extends qa_html_theme_base
 HTML;
         
         /*
-         * Alternatively, you could use an inline SVG icon instead of the font icon.
-         * To switch, replace the <i> tag with the following <span> block:
-         *
-         * <div class="pupi_fns_notification-icon-container" data-plugin-url="{$pluginUrl}">
-         *   <span class="pupi-fns-icon-bell no-font-icon" data-fetching-data="false">
-         *       <svg xmlns="http://www.w3.org/2000/svg" data-fetching-data="false" height="24" width="24" viewBox="0 0 50 50"><path d="M8 38v-3h4.2V19.7q0-4.2 2.475-7.475Q17.15 8.95 21.2 8.1V6.65q0-1.15.825-1.9T24 4q1.15 0 1.975.75.825.75.825 1.9V8.1q4.05.85 6.55 4.125t2.5 7.475V35H40v3Zm16-14.75ZM24 44q-1.6 0-2.8-1.175Q20 41.65 20 40h8q0 1.65-1.175 2.825Q25.65 44 24 44Zm-8.8-9h17.65V19.7q0-3.7-2.55-6.3-2.55-2.6-6.25-2.6t-6.275 2.6Q15.2 16 15.2 19.7Z"></path></svg>
-         *   </span>
-         * </div>
-         */
+            Alternatively, you could use an inline SVG icon instead of the font icon.
+            To switch, replace the <i> tag with the following <span> block:
+            
+            <div class="pupi_fns_notification-icon-container" data-plugin-url="{$pluginUrl}">
+                <span class="pupi-fns-icon-bell no-font-icon" data-fetching-data="false">
+                    <svg xmlns="http://www.w3.org/2000/svg" data-fetching-data="false" height="24" width="24" viewBox="0 0 50 50"><path d="M8 38v-3h4.2V19.7q0-4.2 2.475-7.475Q17.15 8.95 21.2 8.1V6.65q0-1.15.825-1.9T24 4q1.15 0 1.975.75.825.75.825 1.9V8.1q4.05.85 6.55 4.125t2.5 7.475V35H40v3Zm16-14.75ZM24 44q-1.6 0-2.8-1.175Q20 41.65 20 40h8q0 1.65-1.175 2.825Q25.65 44 24 44Zm-8.8-9h17.65V19.7q0-3.7-2.55-6.3-2.55-2.6-6.25-2.6t-6.275 2.6Q15.2 16 15.2 19.7Z"></path></svg>
+                </span>
+            </div>
+        */
         
         // For legacy themes, append the bell icon to the 'loggedin' user info section.
         $legacyThemes = ['Snow', 'Classic', 'Candy'];
@@ -147,6 +137,36 @@ HTML;
 
         // Continue rendering the original user nav
         qa_html_theme_base::nav_user_search();
+    }
+    
+    public function initialize_fns_cached_points()
+    {
+        if (!qa_is_logged_in()) {
+            return;
+        }
+
+        $cache_file = QA_HTML_THEME_LAYER_DIRECTORY . 'cached_points.json';
+        $is_admin = qa_get_logged_in_level() >= QA_USER_LEVEL_ADMIN;
+
+        // Generate cached_points.json on page load if it doesn't exist and the user is an admin.
+        if ($is_admin && !file_exists($cache_file)) {
+            $this->getVotingPoints(true);
+        }
+
+        // Update cache if admin clicked "Save/Recalculate" on the Points admin page, or Plugin Options
+        $code = qa_post_text('code');
+        $getShowAnchor = '?show=' . qa_get('show') . '#' . qa_get('show');
+        $valid_security_code = qa_check_form_security_code('admin/points', $code) || qa_check_form_security_code('admin/plugins'.$getShowAnchor, $code);
+        $save_clicked = qa_clicked('dosaverecalc') || qa_clicked('pupi_fns_save_button');
+
+        if (
+            $this->template === 'admin'
+            && $is_admin
+            && $valid_security_code
+            && $save_clicked
+        ) {
+            $this->getVotingPoints(true); // force refresh
+        }
     }
     
     /**
