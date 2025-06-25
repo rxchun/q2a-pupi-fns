@@ -40,22 +40,21 @@ class qa_html_theme_layer extends qa_html_theme_base
     
     function head_custom() {
         qa_html_theme_base::head_custom();
+        if (!qa_is_logged_in()) return;
         
-        if (qa_is_logged_in())
-            $this->addCss();
+        $this->addCss();
     }
     
     public function body_hidden()
     {
         qa_html_theme_base::body_hidden();
+        if (!qa_is_logged_in()) return;
         
-        if (qa_is_logged_in())
-            $this->addJsBodyFooter();
+        $this->addJsBodyFooter();
     }
 
     private function addCss()
     {
-    
         $this->output('
             <link rel="preload" as="style" href="'.QA_HTML_THEME_LAYER_URLTOROOT.'public/SnowFlat/style.min.css'.FNS_FRONTEND_VERSION.'" onload="this.onload=null;this.rel=\'stylesheet\'">
             <noscript><link rel="stylesheet" href="'.QA_HTML_THEME_LAYER_URLTOROOT.'public/SnowFlat/style.min.css'.FNS_FRONTEND_VERSION.'"></noscript>
@@ -133,7 +132,8 @@ HTML;
     public function nav_user_search()
     {
         // Prepend the bell icon to the user navigation
-        $this->fns_bell_icon();
+        if (qa_is_logged_in())
+            $this->fns_bell_icon();
 
         // Continue rendering the original user nav
         qa_html_theme_base::nav_user_search();
@@ -141,9 +141,7 @@ HTML;
     
     public function initialize_fns_cached_points()
     {
-        if (!qa_is_logged_in()) {
-            return;
-        }
+        if (!qa_is_logged_in()) return;
 
         $cache_file = QA_HTML_THEME_LAYER_DIRECTORY . 'cached_points.json';
         $is_admin = qa_get_logged_in_level() >= QA_USER_LEVEL_ADMIN;
