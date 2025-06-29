@@ -164,15 +164,28 @@ a.pupi_fns_notification-item:hover {
 .pupi_fns_notification-item-header {
     display: flex;
     align-items: center;
-    gap: .5rem;
     font-size: .8rem;
     color: #444;
+}
+
+@media (min-width: 576px) {
+    .pupi_fns_notification-item-header {
+        gap: .5rem;
+    }
 }
 
 .pupi_fns_notification-item-body {
     font-weight: bold;
     font-size: .9rem;
     color: #155ca2;
+}
+
+.fns-gained-points {
+    color: #00ab78;
+}
+
+.fns-lost-points {
+    color: #cc0000;
 }
 
 .pupi_fns_notification-item-date {
@@ -183,7 +196,12 @@ a.pupi_fns_notification-item:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-inline-end: 0.5rem;
+}
+
+@media (max-width: 576px) {
+    .pupi_fns_notification-item-is-read {
+        margin-inline-start: 0.5rem;
+    }
 }
 
 .pupi_fns_notification-item-is-read-dot {
@@ -252,6 +270,18 @@ a.pupi_fns_notification-item:hover {
     content: "\e801";
 }
 
+.no-font-icon.animate-spin,
+.no-font-icon.pupi-fns-icon-spin4 {
+    -moz-animation: none;
+    -o-animation: none;
+    -webkit-animation: none;
+    animation: none;
+    display: initial;
+}
+.no-font-icon:before {
+    content: unset; /* Clears the pseudo-element content, allowing use of a different icon (e.g. an inline SVG instead of .pupi-fns-icon-bell:before) */
+}
+
 .pupi-fns-icon-envelope-open-o:before {
     content: "\e802";
 }
@@ -311,7 +341,7 @@ a.pupi_fns_notification-item:hover {
 /* Animation */
 
 /*
-   Animation example, for spinners
+Animation example, for spinners
 */
 .animate-spin {
     -moz-animation: spin 2s infinite linear;

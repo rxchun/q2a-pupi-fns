@@ -33,6 +33,8 @@ class PUPI_FNS_Admin
                 return PUPI_FNS_Constants::SETTING_MAX_NOTIFICATIONS_PER_USER_DEFAULT;
             case PUPI_FNS_Constants::SETTING_USE_BUILTIN_SCHEMA:
                 return PUPI_FNS_Constants::SETTING_USE_BUILTIN_SCHEMA_DEFAULT;
+            case PUPI_FNS_Constants::SETTING_USE_FULL_DATE:
+                return PUPI_FNS_Constants::SETTING_USE_FULL_DATE_DEFAULT;
         }
 
         return null;
@@ -73,6 +75,7 @@ class PUPI_FNS_Admin
         return [
             $this->getFieldMaxNotificationsPerUser(),
             $this->getFieldUseBuiltInUISchema(),
+            $this->getFieldUseFullDate(),
         ];
     }
 
@@ -97,6 +100,17 @@ class PUPI_FNS_Admin
             'note' => qa_html(pupi_fns()->lang(PUPI_FNS_Constants::LANG_ID_ADMIN_USE_BUILTIN_UI_SCHEMA_NOTE)),
         ];
     }
+    
+    private function getFieldUseFullDate(): array
+    {
+        return [
+            'type' => 'checkbox',
+            'tags' => sprintf('name="%s"', qa_html(PUPI_FNS_Constants::SETTING_USE_FULL_DATE)),
+            'label' => qa_html(pupi_fns()->lang(PUPI_FNS_Constants::LANG_ID_ADMIN_USE_FULL_DATE_LABEL)),
+            'value' => (bool)qa_opt(PUPI_FNS_Constants::SETTING_USE_FULL_DATE),
+            'note' => qa_html(pupi_fns()->lang(PUPI_FNS_Constants::LANG_ID_ADMIN_USE_FULL_DATE_NOTE)),
+        ];
+    }
 
     // Save methods
 
@@ -104,6 +118,7 @@ class PUPI_FNS_Admin
     {
         $this->saveSettingMaxNotificationsPerUser();
         $this->saveSettingUseBuiltInUISchema();
+        $this->saveSettingUseFullDate();
     }
 
     private function saveSettingMaxNotificationsPerUser()
@@ -118,4 +133,11 @@ class PUPI_FNS_Admin
         $value = (bool)qa_post_text(PUPI_FNS_Constants::SETTING_USE_BUILTIN_SCHEMA);
         qa_opt(PUPI_FNS_Constants::SETTING_USE_BUILTIN_SCHEMA, $value);
     }
+    
+    private function saveSettingUseFullDate()
+    {
+        $value = (bool)qa_post_text(PUPI_FNS_Constants::SETTING_USE_FULL_DATE);
+        qa_opt(PUPI_FNS_Constants::SETTING_USE_FULL_DATE, $value);
+    }
+    
 }

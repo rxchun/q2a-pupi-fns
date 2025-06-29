@@ -39,6 +39,8 @@ class PUPI_FNS_Constants
     const LANG_ID_ADMIN_MAX_NOTIFICATIONS_PER_USER_NOTE = 'admin_max_notifications_per_user_note';
     const LANG_ID_ADMIN_USE_BUILTIN_UI_SCHEMA_LABEL = 'admin_use_builtin_ui_schema_label';
     const LANG_ID_ADMIN_USE_BUILTIN_UI_SCHEMA_NOTE = 'admin_use_builtin_ui_schema_note';
+    const LANG_ID_ADMIN_USE_FULL_DATE_LABEL = 'admin_use_full_date_label';
+    const LANG_ID_ADMIN_USE_FULL_DATE_NOTE = 'admin_use_full_date_note';
 
     const LANG_ID_EVENT_A_POST_NAME = 'event_a_post_name';
     const LANG_ID_EVENT_C_POST_NAME = 'event_c_post_name';
@@ -71,9 +73,11 @@ class PUPI_FNS_Constants
 
     const SETTING_MAX_NOTIFICATIONS_PER_USER = 'pupi_fns_max_notifications_per_user';
     const SETTING_USE_BUILTIN_SCHEMA = 'pupi_fns_use_builtin_ui_schema';
+    const SETTING_USE_FULL_DATE = 'pupi_fns_use_full_date';
 
     // Settings' default values
 
     const SETTING_MAX_NOTIFICATIONS_PER_USER_DEFAULT = 20;
     const SETTING_USE_BUILTIN_SCHEMA_DEFAULT = true;
+    const SETTING_USE_FULL_DATE_DEFAULT = false;
 }

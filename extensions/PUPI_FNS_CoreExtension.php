@@ -55,12 +55,30 @@ class PUPI_FNS_CoreExtension implements PUPI_FNS_IExtension
 
         $eventInfo = PUPI_FNS_NotificationTypes::EVENT_INFO[$eventId];
 
+        // Convert created_at to a Unix timestamp if not already numeric
+        $createdAtTimestamp = is_numeric($notification['created_at'])
+            ? (int) $notification['created_at']
+            : strtotime($notification['created_at']);
+
+        // Calculate relative time (e.g., "5 days ago"), fallback to 'unknown' if timestamp invalid
+        if ($createdAtTimestamp) {
+            // qa_time_to_string expects a delta time; here qa_opt('db_time') is current time
+            $relativeTime = qa_time_to_string(qa_opt('db_time') - $createdAtTimestamp);
+            $createdAtRelative = qa_lang_html_sub('main/x_ago', $relativeTime);
+        } else {
+            $createdAtRelative = 'unknown';
+        }
+
+        // Reusable full date
+        $createdAtFullFormatted = $this->fnsFormatDate($notification['created_at']);
+
         $notification = [
-            'plugin_id' => $notification['plugin_id'],
-            'event_name' => $eventInfo['eventName'],
-            'event_id' => $eventId,
-            'name' => pupi_fns()->lang($eventInfo['langIdName']),
-            'created_at' => $notification['created_at'],
+            'plugin_id'       => $notification['plugin_id'],
+            'event_name'      => $eventInfo['eventName'],
+            'event_id'        => $eventId,
+            'name'            => pupi_fns()->lang($eventInfo['langIdName']),
+            'created_at'      => qa_opt('pupi_fns_use_full_date') ? $createdAtFullFormatted : $createdAtRelative,
+            'created_at_full' => $createdAtFullFormatted, // Used to create a tooltip on hover, for the Relative date
         ];
 
         switch ($eventId) {
@@ -132,5 +150,10 @@ class PUPI_FNS_CoreExtension implements PUPI_FNS_IExtension
         $notification['icon'] = self::EVENT_TO_ICON_CLASS_MAP[$eventId];
 
         return $notification;
+    }
+    
+    function fnsFormatDate($dateString) {
+        $createdAtDate = new DateTime($dateString);
+        return $createdAtDate->format('Y-m-d H:i:s');
     }
 }
