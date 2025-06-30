@@ -28,7 +28,7 @@ return [
     PUPI_FNS_Constants::LANG_ID_ADMIN_USE_BUILTIN_UI_SCHEMA_LABEL => 'Use built-in user interface',
     PUPI_FNS_Constants::LANG_ID_ADMIN_USE_BUILTIN_UI_SCHEMA_NOTE => 'Only uncheck if another notifications renderer has been installed',
     PUPI_FNS_Constants::LANG_ID_ADMIN_USE_FULL_DATE_LABEL => 'Use full dates',
-    PUPI_FNS_Constants::LANG_ID_ADMIN_USE_FULL_DATE_NOTE => 'Display full date and time (e.g., "2025-06-24T05:25:33") instead of relative times (e.g., "5 days ago").',
+    PUPI_FNS_Constants::LANG_ID_ADMIN_USE_FULL_DATE_NOTE => 'Display full date and time (e.g., "2025-06-30 12:45:00") instead of relative times (e.g., "5 days ago").',
 
     PUPI_FNS_Constants::LANG_ID_EVENT_A_POST_NAME => 'Question answered',
     PUPI_FNS_Constants::LANG_ID_EVENT_C_POST_NAME => 'Comment added',
