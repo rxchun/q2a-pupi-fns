@@ -97,25 +97,6 @@
     padding: .5rem;
 }
 
-.pupi_fns_notification-list::-webkit-scrollbar {
-    width: .9rem;
-}
-
-.pupi_fns_notification-list::-webkit-scrollbar-track {
-    background-color: transparent;
-}
-
-.pupi_fns_notification-list::-webkit-scrollbar-thumb {
-    background-color: #dedede;
-    border-radius: .375rem;
-    border: .25rem solid transparent;
-    background-clip: content-box;
-}
-
-.pupi_fns_notification-list::-webkit-scrollbar-thumb:hover {
-    background-color: #c8c8c8;
-}
-
 .pupi_fns_notification-list-no-notifications-header .pupi-fns-icon-envelope-open-o:before {
     font-size: 48px;
     color: #3a75af;

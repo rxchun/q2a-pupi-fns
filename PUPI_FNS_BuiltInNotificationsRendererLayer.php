@@ -23,7 +23,7 @@
 */
 
 // CSS & JS Patch Version
-define('FNS_FRONTEND_VERSION', '?v=3');
+define('FNS_FRONTEND_VERSION', '?v=5');
 
 class qa_html_theme_layer extends qa_html_theme_base
 {
